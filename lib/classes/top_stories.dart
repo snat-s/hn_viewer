@@ -16,6 +16,6 @@ Future<TopStories> fetchTopStories(String queryParameter) async {
     //print(TopStories(topStories: jsonDecode(response.body)).toString());
     return TopStories(topStories: jsonDecode(response.body));
   } else {
-    throw Exception('Failed to fetch some questions');
+    throw Exception('Failed to fetch some stories');
   }
 }

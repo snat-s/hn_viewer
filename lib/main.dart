@@ -1,23 +1,11 @@
-import 'dart:convert';
+import 'package:birthday_reminder/widgets/view_for_timelines.dart';
+
 import 'widgets/element_on_list.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'classes/news.dart';
 import 'classes/top_stories.dart';
 import 'widgets/title_page.dart';
 
 const numberOfItems = 100;
-
-Future<News> fetchNews(int specificRequest) async {
-  final response = await http.get(Uri.parse(
-      'https://hacker-news.firebaseio.com/v0/item/$specificRequest.json?print=pretty'));
-
-  if (response.statusCode == 200) {
-    return News.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to fetch some News :( ');
-  }
-}
 
 void main(List<String> args) {
   runApp(const HNApp());
@@ -46,23 +34,13 @@ class _HNMainScreenState extends State<HNMainScreen> {
   late Future<TopStories> news, questions, show;
   final PageController _controller = PageController(initialPage: 0);
   final List<String> tabs = <String>['Top Stories', 'Ask', 'Show'];
-  final List<String> faces = <String>[
-    ':)',
-    ';)',
-    ':O',
-    "ʕ•ᴥ•ʔ",
-    "(ᵔᴥᵔ)",
-    "◉_◉",
-    "⚆ _ ⚆",
-    "˙ ͜ʟ˙",
-  ];
+
   @override
   void initState() {
     super.initState();
     news = fetchTopStories('topstories');
     questions = fetchTopStories('askstories');
     show = fetchTopStories('showstories');
-    //print(news2);
   }
 
   @override
@@ -213,90 +191,26 @@ class _HNMainScreenState extends State<HNMainScreen> {
                 },
                 body: TabBarView(
                   children: [
-                    CustomScrollView(
-                      slivers: [
-                        TitlePage(
-                          title: (faces.toList()..shuffle())
-                              .first, // TODO: The random faces is because I don't know how to fix this dead space
-                          height2: 150,
-                        ),
-                        SliverList(
-                          delegate:
-                              SliverChildBuilderDelegate(((context, index) {
-                            return FutureBuilder(
-                              future: news,
-                              builder: ((context, snapshot3) {
-                                if (snapshot3.hasData) {
-                                  final specificNews = fetchNews(
-                                      snapshot3.data!.topStories[index]);
-                                  return ElementOnList(
-                                      specificNews: specificNews);
-                                } else if (snapshot3.hasError) {
-                                  return const Text("ERRORRRRR no questions");
-                                }
-                                return const Text('Loading...');
-                              }),
-                            );
-                          })),
-                        ),
-                      ],
+                    RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ViewForTimeLines(
+                        news: news,
+                        section: 'topstories',
+                        isSection: false,
+                        separator: '',
+                      ),
                     ),
-                    CustomScrollView(
-                      slivers: [
-                        TitlePage(
-                          title: (faces.toList()..shuffle()).first,
-                          height2: 150,
-                        ),
-                        SliverList(
-                          delegate:
-                              SliverChildBuilderDelegate((context, index) {
-                            return FutureBuilder(
-                              future: questions,
-                              builder: ((context, snapshot3) {
-                                if (snapshot3.hasData) {
-                                  final specificNews = fetchNews(
-                                      snapshot3.data!.topStories[index]);
-                                  return ElementOnList(
-                                      specificNews: specificNews);
-                                } else if (snapshot3.hasError) {
-                                  return const Text("ERRORRRRR no questions");
-                                }
-                                return const Text('Loading...');
-                              }),
-                            );
-                          }),
-                        ),
-                      ],
+                    ViewForTimeLines(
+                      news: questions,
+                      section: 'askstories',
+                      isSection: false,
+                      separator: '',
                     ),
-                    CustomScrollView(
-                      slivers: [
-                        TitlePage(
-                          title: (faces.toList()..shuffle()).first,
-                          height2: 150,
-                        ),
-                        SliverList(
-                          delegate:
-                              SliverChildBuilderDelegate(((context, index) {
-                            return FutureBuilder(
-                              future: show,
-                              builder: ((context, snapshot3) {
-                                if (snapshot3.hasData) {
-                                  if (index <
-                                      snapshot3.data!.topStories.length) {
-                                    final specificNews = fetchNews(
-                                        snapshot3.data!.topStories[index]);
-                                    return ElementOnList(
-                                        specificNews: specificNews);
-                                  }
-                                } else if (snapshot3.hasError) {
-                                  return const Text("ERRORRRRR no questions");
-                                }
-                                return const Text('Loading...');
-                              }),
-                            );
-                          })),
-                        ),
-                      ],
+                    ViewForTimeLines(
+                      news: show,
+                      section: 'showstories',
+                      isSection: false,
+                      separator: '',
                     ),
                   ],
                 )),

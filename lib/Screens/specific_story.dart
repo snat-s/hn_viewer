@@ -36,137 +36,173 @@ class _SpecificNewsState extends State<SpecificNews> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder(
-        future: widget.news,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final List<int> commentIDs = List<int>.from(snapshot.data!.kids);
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      color: Colors.amber,
+      child: Scaffold(
+        body: FutureBuilder(
+          future: widget.news,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final List<int> commentIDs = List<int>.from(snapshot.data!.kids);
 
-            return NotificationListener<ScrollEndNotification>(
-              onNotification: (notification) {
-                if (notification.metrics.atEdge) {
-                  bool isTop = notification.metrics.pixels == 0.0;
-                  if (!isTop) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(''),
-                        action: SnackBarAction(
-                          label: 'Go Back',
-                          onPressed: () {
-                            if (!mounted) return;
-                            Navigator.pop(context);
-                          },
+              return NotificationListener<ScrollEndNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.atEdge) {
+                    bool isTop = notification.metrics.pixels == 0.0;
+                    if (!isTop) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(''),
+                          action: SnackBarAction(
+                            textColor: Colors.white,
+                            label: 'Go Back',
+                            onPressed: () {
+                              if (!mounted) return;
+                              Navigator.pop(context);
+                            },
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   }
-                }
-                return true;
-              },
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    title: Text(snapshot.data!.title),
-                    backgroundColor: Colors.orange,
-                    floating: true,
-                  ),
-                  SliverToBoxAdapter(
-                    child: GestureDetector(
-                      onTap: () async {
-                        if (!await launchUrl(Uri.parse(snapshot.data!.url))) {
-                          throw 'Could not launch ${snapshot.data!.title}';
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                          snapshot.data!.title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
-                            color: Colors.blueAccent,
+                  return true;
+                },
+                child: CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      title: Text(snapshot.data!.title),
+                      backgroundColor: Colors.orange,
+                      floating: true,
+                    ),
+                    SliverToBoxAdapter(
+                      child: GestureDetector(
+                        onTap: () async {
+                          if (snapshot.data!.url == '') {
+                            return;
+                          }
+                          if (!await launchUrl(Uri.parse(snapshot.data!.url))) {
+                            throw 'Could not launch ${snapshot.data!.title}';
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text(
+                            snapshot.data!.title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                              color: Colors.blueAccent,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  if (snapshot.data!.type == 'story')
                     SliverPadding(
-                      padding: const EdgeInsets.all(15.0),
+                      padding: const EdgeInsets.all(20.0),
                       sliver: SliverToBoxAdapter(
-                        child: Html(
-                          data: snapshot.data!.text,
-                          style: {"body": Style(fontWeight: FontWeight.bold)},
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ShowUser(
+                                    user: snapshot.data!.by,
+                                  ),
+                                ));
+                          },
+                          child: Text(
+                            snapshot.data!.by,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(((context, index) {
-                      if (index < commentIDs.length) {
-                        Future<Comment> comment =
-                            fetchComments(commentIDs[index]);
-                        return FutureBuilder<Comment>(
-                          future: comment,
-                          builder: ((context, snapshot) {
-                            if (snapshot.hasData) {
-                              //print(snapshot.data!.kids);
-                              return Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: ListTile(
-                                  title: Html(
-                                    data: snapshot.data!.comment,
-                                    onLinkTap: (url, context, attributes,
-                                        element) async {
-                                      if (kDebugMode) {
-                                        print(url.runtimeType);
-                                      }
-                                      if (!await launchUrl(Uri.parse(url!))) {
-                                        throw 'Could not launch $url';
-                                      }
-                                    },
-                                  ),
-                                  subtitle: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ShowUser(
-                                              user: snapshot.data!.by,
-                                            ),
-                                          ));
-                                    },
-                                    child: Text(
-                                      snapshot.data!.by,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        decoration: TextDecoration.underline,
+                    if (snapshot.data!.type == 'story')
+                      SliverPadding(
+                        padding: const EdgeInsets.all(15.0),
+                        sliver: SliverToBoxAdapter(
+                          child: Html(
+                            data: snapshot.data!.text,
+                            style: {"body": Style(fontWeight: FontWeight.bold)},
+                          ),
+                        ),
+                      ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(((context, index) {
+                        if (index < commentIDs.length) {
+                          Future<Comment> comment =
+                              fetchComments(commentIDs[index]);
+                          return FutureBuilder<Comment>(
+                            future: comment,
+                            builder: ((context, snapshot) {
+                              if (snapshot.hasData) {
+                                //print(snapshot.data!.kids);
+                                return Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: ListTile(
+                                    title: Html(
+                                      data: snapshot.data!.comment,
+                                      onLinkTap: (url, context, attributes,
+                                          element) async {
+                                        if (kDebugMode) {
+                                          print(url.runtimeType);
+                                        }
+                                        if (!await launchUrl(Uri.parse(url!))) {
+                                          throw 'Could not launch $url';
+                                        }
+                                      },
+                                    ),
+                                    subtitle: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ShowUser(
+                                                user: snapshot.data!.by,
+                                              ),
+                                            ));
+                                      },
+                                      child: Text(
+                                        snapshot.data!.by,
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(
+                                          decoration: TextDecoration.underline,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            } else if (snapshot.hasError) {
-                              return Text('${snapshot.error}');
-                            }
-                            return const Text('Loading...');
-                          }),
-                        );
-                      }
-                      return null;
-                    })),
-                  ),
-                ],
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Text('${snapshot.error}');
-          }
-          return const Text('Loading...');
-        },
+                                );
+                              } else if (snapshot.hasError) {
+                                return Text('${snapshot.error}');
+                              }
+                              return const Text('Loading...');
+                            }),
+                          );
+                        }
+                        return null;
+                      })),
+                    ),
+                  ],
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+            return const Text('Loading...');
+          },
+        ),
       ),
     );
+  }
+
+  Future<void> _refresh() async {
+    // TODO: Actually make it make something
+    return Future.delayed(const Duration(seconds: 1));
   }
 }

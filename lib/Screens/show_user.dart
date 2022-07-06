@@ -1,35 +1,15 @@
 import 'dart:convert';
 
 import 'package:birthday_reminder/widgets/element_on_list.dart';
-import 'package:birthday_reminder/main.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:birthday_reminder/classes/user.dart';
 
-class User {
-  final String about;
-  final String id;
-  final int karma;
-  final int created;
-  final List<dynamic> submitted;
-  const User(
-      {required this.about,
-      required this.id,
-      required this.karma,
-      required this.submitted,
-      required this.created});
-  factory User.fromJson(Map<String?, dynamic> json) {
-    return User(
-        about: (json["about"] ?? '') as String,
-        id: (json["id"] ?? '') as String,
-        karma: json["karma"] as int,
-        created: (json["created"] ?? 0) as int,
-        submitted: (json["submitted"] ?? []) as List<dynamic>);
-  }
-}
+import '../widgets/view_for_timelines.dart';
 
 Future<User> fetchUser(String user) async {
   final response = await http.get(
@@ -44,8 +24,8 @@ Future<User> fetchUser(String user) async {
 }
 
 class ShowUser extends StatefulWidget {
-  ShowUser({super.key, required this.user});
-  String user;
+  const ShowUser({super.key, required this.user});
+  final String user;
   @override
   State<ShowUser> createState() => _ShowUserState();
 }
@@ -103,14 +83,6 @@ class _ShowUserState extends State<ShowUser> {
                     ),
                   ),
                 ),
-                // SliverPadding(
-                //   padding: const EdgeInsets.all(15),
-                //   sliver: SliverToBoxAdapter(
-                //     child: Text(
-                //         'Created: ${DateTime.fromMicrosecondsSinceEpoch(1000 * snapshot.data!.created)}'),
-                //   ),
-                // ),
-
                 const SliverPadding(
                   padding: EdgeInsets.all(8.0),
                   sliver: SliverToBoxAdapter(
