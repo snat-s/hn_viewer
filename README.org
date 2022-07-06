@@ -2,4 +2,5 @@
 
 A simple HN reader.
 
-[[./assets/demo.mov]]
+[[./assets/pic1.png]]
+[[./assets/pic2.png]]
