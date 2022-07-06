@@ -1,6 +1,0 @@
-* hn_reader
-
-A simple HN reader.
-
-[[./assets/pic1.png]]
-[[./assets/pic2.png]]
