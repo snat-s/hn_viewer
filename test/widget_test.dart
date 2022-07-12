@@ -11,11 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hn_reader/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Check the main page', (WidgetTester tester) async {
     await tester.pumpWidget(const HNApp());
-    final titleFinder = find.text('HN Viewer');
-    // Verify that our counter starts at 0.
-    expect(titleFinder, findsOneWidget);
+    //await tester.pumpAndSettle(const Duration(seconds: 10));
+    expect(find.text('Top Stories'), findsOneWidget);
   });
 }
