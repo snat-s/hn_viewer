@@ -1,28 +1,19 @@
 import 'dart:convert';
-
-import 'package:birthday_reminder/Screens/show_user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import '../classes/comment.dart';
-import '../classes/news.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
-Future<Comment> fetchComments(int specificRequest) async {
-  final response = await http.get(Uri.parse(
-      'https://hacker-news.firebaseio.com/v0/item/$specificRequest.json?print=pretty'));
-  if (response.statusCode == 200) {
-    return Comment.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to fetch some News :( ');
-  }
-}
+import 'show_user.dart';
+import '../classes/comment.dart';
+import '../classes/news.dart';
+import '../functions/all_functions.dart';
 
 class SpecificNews extends StatefulWidget {
-  final Future<News> news;
-
   const SpecificNews({super.key, required this.news});
+
+  final Future<News> news;
 
   @override
   State<SpecificNews> createState() => _SpecificNewsState();
@@ -100,8 +91,19 @@ class _SpecificNewsState extends State<SpecificNews> {
                         ),
                       ),
                     ),
+                    if (snapshot.data!.type == 'story')
+                      SliverPadding(
+                        padding: const EdgeInsets.all(15.0),
+                        sliver: SliverToBoxAdapter(
+                          child: Html(
+                            data: snapshot.data!.text,
+                            style: {"body": Style(fontWeight: FontWeight.bold)},
+                            onLinkTap: _launchURL,
+                          ),
+                        ),
+                      ),
                     SliverPadding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.only(right: 20.0),
                       sliver: SliverToBoxAdapter(
                         child: GestureDetector(
                           onTap: () {
@@ -123,16 +125,6 @@ class _SpecificNewsState extends State<SpecificNews> {
                         ),
                       ),
                     ),
-                    if (snapshot.data!.type == 'story')
-                      SliverPadding(
-                        padding: const EdgeInsets.all(15.0),
-                        sliver: SliverToBoxAdapter(
-                          child: Html(
-                            data: snapshot.data!.text,
-                            style: {"body": Style(fontWeight: FontWeight.bold)},
-                          ),
-                        ),
-                      ),
                     SliverList(
                       delegate: SliverChildBuilderDelegate(((context, index) {
                         if (index < commentIDs.length) {
@@ -148,15 +140,7 @@ class _SpecificNewsState extends State<SpecificNews> {
                                   child: ListTile(
                                     title: Html(
                                       data: snapshot.data!.comment,
-                                      onLinkTap: (url, context, attributes,
-                                          element) async {
-                                        if (kDebugMode) {
-                                          print(url.runtimeType);
-                                        }
-                                        if (!await launchUrl(Uri.parse(url!))) {
-                                          throw 'Could not launch $url';
-                                        }
-                                      },
+                                      onLinkTap: _launchURL,
                                     ),
                                     subtitle: GestureDetector(
                                       onTap: () {
@@ -199,6 +183,15 @@ class _SpecificNewsState extends State<SpecificNews> {
         ),
       ),
     );
+  }
+
+  void _launchURL(url, context, attributes, element) async {
+    if (kDebugMode) {
+      print(url.runtimeType);
+    }
+    if (!await launchUrl(Uri.parse(url!))) {
+      throw 'Could not launch $url';
+    }
   }
 
   Future<void> _refresh() async {

@@ -1,37 +1,23 @@
-import 'dart:convert';
-
-import 'package:birthday_reminder/widgets/element_on_list.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:birthday_reminder/classes/user.dart';
 
-import '../widgets/view_for_timelines.dart';
-
-Future<User> fetchUser(String user) async {
-  final response = await http.get(
-    Uri.parse(
-        'https://hacker-news.firebaseio.com/v0/user/$user.json?print=pretty'),
-  );
-  if (response.statusCode == 200) {
-    return User.fromJson((jsonDecode(response.body)));
-  } else {
-    throw Exception('Failed to fetch user :(');
-  }
-}
+import '../classes/user.dart';
+import '../functions/all_functions.dart';
 
 class ShowUser extends StatefulWidget {
   const ShowUser({super.key, required this.user});
+
   final String user;
+
   @override
   State<ShowUser> createState() => _ShowUserState();
 }
 
 class _ShowUserState extends State<ShowUser> {
   late Future<User> specificUser;
+  final titleStyle = const TextStyle(color: Colors.black, fontSize: 30);
 
   @override
   void initState() {
@@ -55,24 +41,53 @@ class _ShowUserState extends State<ShowUser> {
                 SliverPadding(
                   padding: const EdgeInsets.all(15),
                   sliver: SliverToBoxAdapter(
-                    child: Text('Name: ${snapshot.data!.id}'),
+                    child: RichText(
+                      text: TextSpan(
+                        style: titleStyle,
+                        children: [
+                          const TextSpan(
+                            text: 'Name: ',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(text: snapshot.data!.id)
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.all(15),
                   sliver: SliverToBoxAdapter(
-                    child: Text('Karma: ${snapshot.data!.karma}'),
+                    child: RichText(
+                      text: TextSpan(
+                        style: titleStyle,
+                        children: [
+                          const TextSpan(
+                            text: 'Karma: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: '${snapshot.data!.karma}'),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SliverPadding(
                   padding: EdgeInsets.all(15),
                   sliver: SliverToBoxAdapter(
-                    child: Text('About: '),
+                    child: Text(
+                      'About: ',
+                      //style: titleStyle,
+                      style: TextStyle(color: Colors.black, fontSize: 30),
+                    ),
                   ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.all(15.0),
                   sliver: SliverToBoxAdapter(
+                    //child: Text(snapshot.data!.about),
                     child: Html(
                       data: snapshot.data!.about,
                       onLinkTap: (url, context, attributes, element) async {
@@ -80,46 +95,13 @@ class _ShowUserState extends State<ShowUser> {
                           throw 'Could not launch $url';
                         }
                       },
+                      style: {
+                        "body": Style(
+                          fontSize: FontSize.large,
+                        ),
+                      },
                     ),
                   ),
-                ),
-                const SliverPadding(
-                  padding: EdgeInsets.all(8.0),
-                  sliver: SliverToBoxAdapter(
-                      child: Text(
-                    'Stories published',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    if (index < snapshot.data!.submitted.length) {
-                      final specificNews =
-                          fetchNews(snapshot.data!.submitted[index]);
-
-                      return FutureBuilder(
-                        future: specificNews,
-                        builder: (context, snapshot2) {
-                          if (snapshot2.hasData) {
-                            if (snapshot2.data!.type == 'story') {
-                              return ElementOnList(
-                                specificNews: specificNews,
-                              );
-                            }
-                          } else if (snapshot2.hasError) {
-                            return const Text(
-                                "Error, unable to fetch user stories.");
-                          }
-                          return const Text('');
-                        },
-                      );
-                    }
-                    return null;
-                  }),
                 ),
               ],
             ),

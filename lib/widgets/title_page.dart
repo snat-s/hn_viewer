@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
 class TitlePage extends StatelessWidget {
-  TitlePage({super.key, required this.title, required this.height2});
-  String title;
-  double height2;
+  const TitlePage({super.key, required this.title, required this.height});
+
+  final String title;
+  final double height;
+
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
         alignment: Alignment.center,
         constraints: BoxConstraints.tightForFinite(
-          height: height2,
+          height: height,
         ),
         color: Colors.orange,
         child: Text(
